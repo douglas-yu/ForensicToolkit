@@ -1,5 +1,5 @@
 """
-Evidence data models for DFAT
+Evidence data models
 """
 
 from dataclasses import dataclass, field

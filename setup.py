@@ -3,9 +3,8 @@ from setuptools import setup, find_packages
 setup(
     name='dfat',
     version='1.0.0',
-    description='Digital Forensics Analysis Tool (DFAT) - Professional Edition',
+    description='Digital Forensics Analysis Tool - Professional Edition',
     author='Douglas Yu',
-    author_email='doug@example.com',
     packages=find_packages(),
     install_requires=[
         'PyQt5>=5.15.0',
@@ -23,14 +22,14 @@ setup(
     python_requires='>=3.8',
     classifiers=[
         'Development Status :: 4 - Beta',
+        'Environment :: X11 Applications :: Qt',
         'Intended Audience :: Information Technology',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
+        'Topic :: System :: Monitoring',
         'Topic :: Security',
-        'Topic :: System :: Systems Administration',
     ],
 )

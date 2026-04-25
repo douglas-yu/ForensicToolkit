@@ -68,7 +68,6 @@ class ForensicAnalysisReport:
         """Calculate overall risk score"""
         if not self.findings:
             self.risk_score = 0.0
-            self.overall_status = "clean"
             return
         
         weighted_score = 0

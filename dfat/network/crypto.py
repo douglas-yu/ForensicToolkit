@@ -1,18 +1,23 @@
 """
-TLS/SSL certificate management and encryption
+TLS certificate management and encryption
 """
 
 import os
 import ssl
 from pathlib import Path
-from cryptography import x509
-from cryptography.x509.oid import NameOID
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
-import datetime
-import uuid
+from datetime import datetime
+import datetime as dt
+
+try:
+    from cryptography import x509
+    from cryptography.x509.oid import NameOID
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.hazmat.primitives import serialization
+    CRYPTOGRAPHY_AVAILABLE = True
+except ImportError:
+    CRYPTOGRAPHY_AVAILABLE = False
 
 from dfat.utils.logger import setup_logger
 
@@ -26,16 +31,20 @@ class CertificateManager:
         self.cert_dir = Path(cert_dir)
         self.cert_dir.mkdir(parents=True, exist_ok=True)
         
-        # Generate or load server certificate
         self.server_cert = self.cert_dir / 'server.crt'
         self.server_key = self.cert_dir / 'server.key'
         
-        if not self.server_cert.exists() or not self.server_key.exists():
-            self.generate_server_certificate()
+        if CRYPTOGRAPHY_AVAILABLE:
+            if not self.server_cert.exists() or not self.server_key.exists():
+                self.generate_server_certificate()
     
     def generate_server_certificate(self):
         """Generate self-signed server certificate"""
-        logger.info("Generating self-signed server certificate...")
+        if not CRYPTOGRAPHY_AVAILABLE:
+            logger.warning("Cryptography library not installed. Skipping certificate generation.")
+            return
+        
+        logger.info("Generating server certificate...")
         
         # Generate private key
         private_key = rsa.generate_private_key(
@@ -62,9 +71,9 @@ class CertificateManager:
         ).serial_number(
             x509.random_serial_number()
         ).not_valid_before(
-            datetime.datetime.utcnow()
+            datetime.utcnow()
         ).not_valid_after(
-            datetime.datetime.utcnow() + datetime.timedelta(days=365)
+            datetime.utcnow() + dt.timedelta(days=365)
         ).add_extension(
             x509.SubjectAlternativeName([
                 x509.DNSName(u"localhost"),
@@ -91,11 +100,13 @@ class CertificateManager:
     
     def generate_agent_certificate(self, agent_id: str) -> tuple:
         """Generate certificate for remote agent"""
+        if not CRYPTOGRAPHY_AVAILABLE:
+            return None, None
+        
         agent_cert = self.cert_dir / f'agent_{agent_id}.crt'
         agent_key = self.cert_dir / f'agent_{agent_id}.key'
         
         if agent_cert.exists() and agent_key.exists():
-            logger.debug(f"Agent certificate already exists: {agent_id}")
             return agent_cert, agent_key
         
         logger.info(f"Generating agent certificate for: {agent_id}")
@@ -125,9 +136,9 @@ class CertificateManager:
         ).serial_number(
             x509.random_serial_number()
         ).not_valid_before(
-            datetime.datetime.utcnow()
+            datetime.utcnow()
         ).not_valid_after(
-            datetime.datetime.utcnow() + datetime.timedelta(days=90)
+            datetime.utcnow() + dt.timedelta(days=90)
         ).sign(private_key, hashes.SHA256(), default_backend())
         
         # Write certificate and key
@@ -142,7 +153,6 @@ class CertificateManager:
             ))
         
         os.chmod(agent_key, 0o600)
-        logger.info(f"Agent certificate generated: {agent_cert}")
         return agent_cert, agent_key
     
     def get_ssl_context(self, is_server=True):
@@ -151,10 +161,8 @@ class CertificateManager:
             ssl.Purpose.CLIENT_AUTH if is_server else ssl.Purpose.SERVER_AUTH
         )
         
-        if is_server:
+        if is_server and self.server_cert.exists() and self.server_key.exists():
             context.load_cert_chain(str(self.server_cert), str(self.server_key))
         
         context.minimum_version = ssl.TLSVersion.TLSv1_2
-        context.maximum_version = ssl.TLSVersion.TLSv1_3
-        
         return context

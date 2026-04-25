@@ -1,10 +1,10 @@
 """
-Remote agent data models
+Agent data models
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict
+from typing import Dict, Any
 from enum import Enum
 
 
@@ -50,7 +50,7 @@ class RemoteAgent:
     # Metadata
     tags: Dict[str, str] = field(default_factory=dict)
     deployment_errors: list = field(default_factory=list)
-    
+
 
 @dataclass
 class AgentDeployment:
