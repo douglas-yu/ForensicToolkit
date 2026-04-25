@@ -1,0 +1,8 @@
+PyQt5>=5.15.0
+paramiko>=2.11.0
+cryptography>=3.4.0
+pyinstaller>=4.0
+pyyaml>=5.4.0
+pillow>=8.0.0
+sqlalchemy>=1.4.0
+ipaddress>=1.0.23
